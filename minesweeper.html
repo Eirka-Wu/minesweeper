@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>扫雷 Minesweeper</title>
+<style>
+/* ================================================================
+   全局样式（两种皮肤共用）
+   ================================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  user-select: none;
+  transition: background 0.3s;
+}
+
+/* ================================================================
+   控制栏（难度 + 皮肤切换）
+   ================================================================ */
+.controls {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.difficulty { display: flex; gap: 6px; }
+.theme-toggle {
+  width: 48px; height: 48px; font-size: 20px;
+  border: none; border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s;
+  flex-shrink: 0;  /* 防止被压缩，保持正方形 */
+}
+.theme-toggle:hover { transform: scale(1.1); }
+.theme-toggle:active { transform: scale(0.95); }
+
+/* ===== 顶部信息栏 ===== */
+.header {
+  display: flex;
+  justify-content: space-between; /* 雷数-笑脸-计时器 */
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+/* ================================================================
+   游戏棋盘
+   ================================================================ */
+.board {
+  display: grid;
+  gap: 1px;
+  padding: 1px;
+  border-radius: 4px;
+}
+.cell {
+  width: 32px; height: 32px;
+  border: none; cursor: pointer;
+  font-size: 16px; font-weight: bold;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s;
+  border-radius: 2px;
+}
+.cell.revealed { cursor: default; }
+
+/* 数字颜色：1-8各不同（两种皮肤共用） */
+.n1 { color: #0000ff; }  /* 蓝色 */
+.n2 { color: #008000; }  /* 绿色 */
+.n3 { color: #ff0000; }  /* 红色 */
+.n4 { color: #000080; }  /* 深蓝 */
+.n5 { color: #800000; }  /* 深红 */
+.n6 { color: #008080; }  /* 青色 */
+.n7 { color: #000000; }  /* 黑色 */
+.n8 { color: #808080; }  /* 灰色 */
+
+
+/* ================================================================
+   现代皮肤（默认，暗色风格）
+   ================================================================ */
+
+/* --- 现代皮肤：页面背景 --- */
+body { background: #1a1a2e; }
+
+/* --- 现代皮肤：游戏容器 --- */
+.game {
+  width: fit-content;       /* 收缩到内容宽度，避免右侧空白 */
+  background: #16213e;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* --- 现代皮肤：计数显示器 --- */
+.counter {
+  background: #0f0f23;
+  color: #e94560;
+  font-family: 'Courier New', monospace;
+  font-size: 28px; font-weight: bold;
+  padding: 8px 16px; border-radius: 6px;
+  min-width: 70px; text-align: center;
+  letter-spacing: 2px;
+  border: 2px solid #0f3460;
+}
+
+/* --- 现代皮肤：笑脸按钮 --- */
+.face {
+  width: 48px; height: 48px; font-size: 28px;
+  border: none; border-radius: 8px;
+  background: #0f3460; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.1s;
+}
+.face:hover { background: #1a4a8a; transform: scale(1.1); }
+.face:active { transform: scale(0.95); }
+
+/* --- 现代皮肤：难度按钮 --- */
+.diff-btn {
+  padding: 6px 14px; border: 2px solid #0f3460; border-radius: 6px;
+  background: transparent; color: #a0a0c0; cursor: pointer;
+  font-size: 13px; transition: all 0.2s;
+}
+.diff-btn:hover { background: #0f3460; color: #fff; }
+.diff-btn.active { background: #e94560; border-color: #e94560; color: #fff; }
+
+/* --- 现代皮肤：皮肤切换按钮 --- */
+.theme-toggle {
+  background: transparent; color: #a0a0c0;
+  border: 2px solid #0f3460;
+}
+.theme-toggle:hover { background: #0f3460; color: #fff; transform: scale(1.1); }
+
+/* --- 现代皮肤：棋盘 --- */
+.board { background: #0f3460; }
+
+/* --- 现代皮肤：格子 --- */
+.cell { background: #1a3a6a; }
+.cell:hover { background: #25508a; }
+.cell.revealed { background: #0f0f23; }
+.cell.revealed:hover { background: #0f0f23; }
+.cell.mine-hit { background: #e94560 !important; }
+.cell.flagged { background: #1a3a6a; }
+.cell.wrong-flag { background: #ff6b6b40; text-decoration: line-through; }
+
+
+/* ================================================================
+   经典皮肤 (.classic，复刻 Windows 经典扫雷)
+   像素级参考 Windows XP 扫雷截图还原
+   ================================================================ */
+
+/* --- 经典皮肤：页面背景（Windows 经典桌面青色） --- */
+body.classic-theme { background: #008080; }
+
+/* --- 经典皮肤：游戏容器（银灰色面板 + 3D凸起外框） --- */
+.game.classic {
+  background: #c0c0c0;
+  border-radius: 0;
+  padding: 10px 12px 12px 12px;
+  box-shadow: none;
+  /* 经典 Windows 3D 凸起边框（外框较粗，约 3-4px） */
+  border-top:    3px solid #ffffff;
+  border-left:   3px solid #ffffff;
+  border-bottom: 3px solid #555555;
+  border-right:  3px solid #555555;
+  /* 外框内侧还有一层细边框 */
+  outline: 1px solid #dfdfdf;
+  outline-offset: -4px;
+}
+
+/* --- 经典皮肤：计数显示器（纯黑底 + 亮红LED数字 + 3D凹陷边框） --- */
+.game.classic .counter {
+  background: #000000;
+  color: #ff0000;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 28px;
+  font-weight: bold;
+  padding: 4px 6px;
+  border-radius: 0;
+  min-width: 62px;
+  text-align: center;
+  letter-spacing: 2px;
+  line-height: 1;
+  /* 3D凹陷边框：左上深色 + 右下白色（与凸起相反） */
+  border: none;
+  border-top:    2px solid #808080;
+  border-left:   2px solid #808080;
+  border-bottom: 2px solid #ffffff;
+  border-right:  2px solid #ffffff;
+}
+
+/* --- 经典皮肤：笑脸按钮（3D凸起，2px边框） --- */
+.game.classic .face {
+  width: 44px; height: 44px;
+  font-size: 22px; line-height: 44px;
+  border-radius: 0;
+  background: #c0c0c0;
+  border-top:    2px solid #ffffff;
+  border-left:   2px solid #ffffff;
+  border-bottom: 2px solid #808080;
+  border-right:  2px solid #808080;
+  transition: none;
+  cursor: pointer;
+}
+.game.classic .face:hover { background: #d0d0d0; transform: none; }
+.game.classic .face:active {
+  /* 按下时反转边框＝凹陷效果 */
+  border-top:    2px solid #808080;
+  border-left:   2px solid #808080;
+  border-bottom: 2px solid #ffffff;
+  border-right:  2px solid #ffffff;
+  transform: none;
+}
+
+/* --- 经典皮肤：难度按钮 --- */
+.game.classic .diff-btn {
+  padding: 3px 10px;
+  border-radius: 0;
+  background: #c0c0c0;
+  color: #000000;
+  font-size: 12px;
+  font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  border-top:    2px solid #ffffff;
+  border-left:   2px solid #ffffff;
+  border-bottom: 2px solid #808080;
+  border-right:  2px solid #808080;
+  transition: none;
+}
+.game.classic .diff-btn:hover { background: #d0d0d0; color: #000; }
+.game.classic .diff-btn.active {
+  background: #b0b0b0;
+  border-top:    2px solid #808080;
+  border-left:   2px solid #808080;
+  border-bottom: 2px solid #ffffff;
+  border-right:  2px solid #ffffff;
+  color: #000;
+}
+
+/* --- 经典皮肤：皮肤切换按钮 --- */
+.game.classic .theme-toggle {
+  width: 44px; height: 44px; font-size: 18px;
+  background: #c0c0c0; color: #000;
+  border-top:    2px solid #ffffff;
+  border-left:   2px solid #ffffff;
+  border-bottom: 2px solid #808080;
+  border-right:  2px solid #808080;
+  border-radius: 0;
+  transition: none;
+}
+.game.classic .theme-toggle:hover { background: #d0d0d0; transform: none; }
+.game.classic .theme-toggle:active {
+  border-top:    2px solid #808080;
+  border-left:   2px solid #808080;
+  border-bottom: 2px solid #ffffff;
+  border-right:  2px solid #ffffff;
+  transform: none;
+}
+
+/* --- 经典皮肤：棋盘外框（3D凹陷边框，模拟嵌入效果） --- */
+.game.classic .board {
+  background: #808080;
+  /* 凹陷边框：左上深色 + 右下白色 */
+  border-top:    2px solid #808080;
+  border-left:   2px solid #808080;
+  border-bottom: 2px solid #ffffff;
+  border-right:  2px solid #ffffff;
+  padding: 2px;
+  border-radius: 0;
+}
+
+/* --- 经典皮肤：格子（3D凸起，2px精确边框） --- */
+.game.classic .cell {
+  background: #c0c0c0;
+  /* 2px 3D凸起效果：左上白 + 右下深灰 */
+  border-top:    2px solid #ffffff;
+  border-left:   2px solid #ffffff;
+  border-bottom: 2px solid #808080;
+  border-right:  2px solid #808080;
+  border-radius: 0;
+  font-size: 13px;
+  font-weight: bold;
+  transition: none;
+}
+.game.classic .cell:hover { background: #d8d8d8; }
+
+/* 经典皮肤：已揭开的格子（平坦 + 1px细边，模拟凹陷底面） */
+.game.classic .cell.revealed {
+  background: #c0c0c0;
+  border: 1px solid #808080;
+  cursor: default;
+}
+.game.classic .cell.revealed:hover { background: #c0c0c0; }
+
+/* 经典皮肤：踩中地雷的格子（红色高亮） */
+.game.classic .cell.mine-hit {
+  background: #ff0000 !important;
+  border: 1px solid #808080;
+}
+
+/* 经典皮肤：插旗的格子（保持3D凸起，旗子覆盖在上面） */
+.game.classic .cell.flagged {
+  background: #c0c0c0;
+  border-top:    2px solid #ffffff;
+  border-left:   2px solid #ffffff;
+  border-bottom: 2px solid #808080;
+  border-right:  2px solid #808080;
+}
+
+/* 经典皮肤：游戏失败后显示的错误标记 */
+.game.classic .cell.wrong-flag {
+  background: #ffb0b0;
+  text-decoration: line-through;
+}
+</style>
+</head>
+
+<body>
+<div class="game" id="gameContainer">
+  <!-- 难度选择 -->
+  <div class="controls">
+    <div class="difficulty">
+      <button class="diff-btn active" data-diff="beginner">初级 9×9</button>
+      <button class="diff-btn" data-diff="intermediate">中级 16×16</button>
+      <button class="diff-btn" data-diff="expert">高级 30×16</button>
+    </div>
+  </div>
+
+  <!-- 状态栏：剩余雷数 / 重新开始 / 计时器 / 皮肤切换 -->
+  <div class="header">
+    <div class="counter" id="mineCounter">010</div>
+    <button class="face" id="faceBtn">😊</button>
+    <div class="counter" id="timer">000</div>
+    <button class="theme-toggle" id="themeToggle" title="切换皮肤">🎨</button>
+  </div>
+
+  <!-- 游戏棋盘容器 -->
+  <div class="board" id="board"></div>
+</div>
+
+<script>
+/**
+ * ============================================================
+ *  扫雷游戏 - 核心逻辑
+ * ============================================================
+ *
+ * 【数据结构】
+ *   board[r][c] = { mine, revealed, flagged, adjacentMines }
+ *
+ * 【游戏流程】
+ *   1. 初始化空棋盘 → 首次点击后布雷（保证首次安全）
+ *   2. 左键揭开 → 空白格自动展开（泛洪填充）
+ *   3. 右键插旗/取消
+ *   4. 双击已揭开数字格（Chord）→ 旗数等于数字时自动揭开周围
+ *   5. 所有安全格揭开 → 胜利
+ */
+
+// ==================== 常量 ====================
+const DIFFICULTIES = {
+  beginner:     { rows: 9,  cols: 9,  mines: 10 },
+  intermediate: { rows: 16, cols: 16, mines: 40 },
+  expert:       { rows: 16, cols: 30, mines: 99 }
+};
+
+const GAME_STATE = Object.freeze({ PLAYING: 1, WON: 2, LOST: 3 });
+const FACE = Object.freeze({ NORMAL: '😊', PRESS: '😮', LOST: '😵', WON: '😎' });
+const DOUBLE_CLICK_DELAY = 300;  // ms，区分单击与双击
+const DISPLAY_MAX = 999;
+
+// ==================== 游戏状态 ====================
+let config = { ...DIFFICULTIES.beginner };
+let board = [];
+let gameState = GAME_STATE.PLAYING;
+let triggeredMine = null;   // { r, c } — 玩家踩中的雷，仅此格红色高亮
+let firstClick = true;
+let timerValue = 0;
+let timerInterval = null;
+let flagsPlaced = 0;
+let safeRevealed = 0;       // 已揭开的安全格数量，用于 O(1) 胜利判定
+let totalSafe = 0;          // 安全格总数 = rows*cols - mines
+let renderGeneration = 0;   // 递增代数，使旧 setTimeout 回调失效
+let isClassic = localStorage.getItem('minesweeper-theme') === 'classic';
+
+// ==================== DOM 引用 ====================
+const gameContainer = document.getElementById('gameContainer');
+const boardEl = document.getElementById('board');
+const mineCounter = document.getElementById('mineCounter');
+const timerEl = document.getElementById('timer');
+const faceBtn = document.getElementById('faceBtn');
+const themeToggle = document.getElementById('themeToggle');
+
+// ==================== 工具函数 ====================
+
+/** 停止计时器 */
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+/** 游戏是否仍在进行中 */
+function isActive() {
+  return gameState === GAME_STATE.PLAYING;
+}
+
+/** 遍历棋盘所有格子 */
+function forEachCell(fn) {
+  for (let r = 0; r < config.rows; r++)
+    for (let c = 0; c < config.cols; c++)
+      fn(r, c);
+}
+
+/** 遍历 (r,c) 周围8个相邻格子 */
+function forEachNeighbor(r, c, fn) {
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      const nr = r + dr, nc = c + dc;
+      if (nr >= 0 && nr < config.rows && nc >= 0 && nc < config.cols)
+        fn(nr, nc);
+    }
+}
+
+/** 格式化为3位数显示 */
+function fmt(n) {
+  return String(Math.min(n, DISPLAY_MAX)).padStart(3, '0');
+}
+
+/** 根据行列索引获取对应的 DOM 格子元素 */
+function cellDOM(r, c) {
+  return boardEl.children[r * config.cols + c];
+}
+
+/** 设置笑脸表情 */
+function setFace(face) {
+  faceBtn.textContent = face;
+}
+
+// ==================== 皮肤 ====================
+
+function applyTheme() {
+  if (isClassic) {
+    gameContainer.classList.add('classic');
+    document.body.classList.add('classic-theme');
+    themeToggle.title = '切换到现代皮肤';
+    localStorage.setItem('minesweeper-theme', 'classic');
+  } else {
+    gameContainer.classList.remove('classic');
+    document.body.classList.remove('classic-theme');
+    themeToggle.title = '切换到经典皮肤';
+    localStorage.setItem('minesweeper-theme', 'modern');
+  }
+}
+
+// ==================== 游戏核心 ====================
+
+function initGame() {
+  gameState = GAME_STATE.PLAYING;
+  triggeredMine = null;
+  firstClick = true;
+  flagsPlaced = 0;
+  safeRevealed = 0;
+  totalSafe = config.rows * config.cols - config.mines;
+  timerValue = 0;
+  stopTimer();
+  timerEl.textContent = fmt(0);
+  mineCounter.textContent = fmt(config.mines);
+  setFace(FACE.NORMAL);
+
+  // 递增代数，使旧格子上的悬而未决的 setTimeout 回调失效
+  renderGeneration++;
+
+  board = Array.from({ length: config.rows }, () =>
+    Array.from({ length: config.cols }, () => ({
+      mine: false, revealed: false, flagged: false, adjacentMines: 0
+    }))
+  );
+
+  renderBoard();
+}
+
+/**
+ * 布雷（首次点击后调用，排除点击位保证首次安全）
+ * Fisher-Yates 洗牌 + 计算相邻雷数
+ */
+function placeMines(excludeR, excludeC) {
+  const positions = [];
+  forEachCell((r, c) => {
+    if (r !== excludeR || c !== excludeC) positions.push([r, c]);
+  });
+
+  for (let i = positions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
+
+  for (let i = 0; i < config.mines; i++) {
+    const [r, c] = positions[i];
+    board[r][c].mine = true;
+  }
+
+  forEachCell((r, c) => {
+    if (board[r][c].mine) return;
+    let count = 0;
+    forEachNeighbor(r, c, (nr, nc) => { if (board[nr][nc].mine) count++; });
+    board[r][c].adjacentMines = count;
+  });
+}
+
+/**
+ * 渲染棋盘（仅创建DOM结构，不绑定逐格事件）
+ * 事件通过 boardEl 上的委托统一处理
+ */
+function renderBoard() {
+  boardEl.style.gridTemplateColumns = `repeat(${config.cols}, 32px)`;
+  boardEl.innerHTML = '';
+
+  const fragment = document.createDocumentFragment();
+  forEachCell((r, c) => {
+    const cell = document.createElement('button');
+    cell.className = 'cell';
+    cell.dataset.r = r;
+    cell.dataset.c = c;
+    fragment.appendChild(cell);
+  });
+  boardEl.appendChild(fragment);
+
+  updateAllCells();
+}
+
+/**
+ * 更新单个格子的 DOM 样式（仅此格，不做全量刷新）
+ */
+function updateCellDOM(r, c) {
+  const cell = cellDOM(r, c);
+  if (!cell) return;
+  const data = board[r][c];
+
+  cell.className = 'cell';
+  cell.textContent = '';
+
+  if (data.revealed) {
+    cell.classList.add('revealed');
+    if (data.mine) {
+      if (triggeredMine && r === triggeredMine.r && c === triggeredMine.c) {
+        cell.classList.add('mine-hit');
+      }
+      cell.textContent = '💣';
+    } else if (data.adjacentMines > 0) {
+      cell.textContent = data.adjacentMines;
+      cell.classList.add('n' + data.adjacentMines);
+    }
+  } else if (data.flagged) {
+    cell.classList.add('flagged');
+    cell.textContent = '🚩';
+  }
+
+  if (gameState === GAME_STATE.LOST && data.flagged && !data.mine) {
+    cell.classList.add('wrong-flag');
+  }
+}
+
+/** 全量更新所有格子DOM（仅在初始化、游戏结束/胜利时使用） */
+function updateAllCells() {
+  forEachCell((r, c) => updateCellDOM(r, c));
+}
+
+function startTimer() {
+  if (timerInterval) return;
+  timerInterval = setInterval(() => {
+    timerValue++;
+    timerEl.textContent = fmt(timerValue);
+  }, 1000);
+}
+
+// ==================== 点击处理 ====================
+
+function onLeftClick(r, c) {
+  if (!isActive()) return;
+  const cell = board[r][c];
+  if (cell.revealed || cell.flagged) return;
+
+  if (firstClick) {
+    firstClick = false;
+    placeMines(r, c);
+    startTimer();
+  }
+
+  reveal(r, c);
+  updateAllCells();
+  checkWin();
+}
+
+function onRightClick(r, c) {
+  if (!isActive()) return;
+  const cell = board[r][c];
+  if (cell.revealed || firstClick) return;
+
+  cell.flagged = !cell.flagged;
+  flagsPlaced += cell.flagged ? 1 : -1;
+  mineCounter.textContent = fmt(config.mines - flagsPlaced);
+  updateCellDOM(r, c);  // 仅更新被操作的格子
+}
+
+/**
+ * 双击和弦（Chord）
+ * 前提：已揭开的数字格 + 周围旗数 == 该格数字 → 揭开周围未标记格
+ */
+function onDoubleClick(r, c) {
+  if (!isActive()) return;
+  const cell = board[r][c];
+  if (!cell.revealed || cell.adjacentMines === 0) return;
+
+  let flagCount = 0;
+  forEachNeighbor(r, c, (nr, nc) => {
+    if (board[nr][nc].flagged) flagCount++;
+  });
+
+  if (flagCount !== cell.adjacentMines) return;
+
+  forEachNeighbor(r, c, (nr, nc) => {
+    if (!isActive()) return;  // 揭开过程中踩雷则立即停止
+    if (!board[nr][nc].flagged && !board[nr][nc].revealed) reveal(nr, nc);
+  });
+
+  updateAllCells();
+  checkWin();
+}
+
+// ==================== 核心逻辑 ====================
+
+/**
+ * 揭开格子（递归泛洪填充）
+ * 注意：此函数不调用 updateAllCells，由顶层调用者负责刷新
+ */
+function reveal(r, c) {
+  if (!isActive()) return;
+  const cell = board[r][c];
+  if (cell.revealed || cell.flagged) return;
+
+  cell.revealed = true;
+
+  if (cell.mine) {
+    triggerGameOver(r, c);
+    return;
+  }
+
+  safeRevealed++;  // 安全格揭开计数
+
+  if (cell.adjacentMines === 0) {
+    forEachNeighbor(r, c, (nr, nc) => reveal(nr, nc));
+  }
+}
+
+function triggerGameOver(r, c) {
+  gameState = GAME_STATE.LOST;
+  triggeredMine = { r, c };
+  stopTimer();
+  setFace(FACE.LOST);
+
+  forEachCell((rr, cc) => {
+    if (board[rr][cc].mine) board[rr][cc].revealed = true;
+  });
+
+  updateAllCells();
+}
+
+function checkWin() {
+  if (!isActive()) return;
+  if (safeRevealed === totalSafe) {
+    gameState = GAME_STATE.WON;
+    stopTimer();
+    setFace(FACE.WON);
+
+    forEachCell((r, c) => {
+      if (board[r][c].mine) board[r][c].flagged = true;
+    });
+
+    flagsPlaced = config.mines;
+    mineCounter.textContent = fmt(0);
+    updateAllCells();
+  }
+}
+
+// ==================== 棋盘事件委托 ====================
+
+boardEl.addEventListener('click', (e) => {
+  const cell = e.target.closest('.cell');
+  if (!cell) return;
+  const r = +cell.dataset.r, c = +cell.dataset.c;
+  if (!isActive()) return;
+
+  // 已揭开的格子：使用延迟检测双击（和弦操作）
+  if (board[r][c].revealed) {
+    const gen = renderGeneration;
+    if (cell._clickPending) {
+      clearTimeout(cell._clickPending);
+      cell._clickPending = null;
+      if (renderGeneration === gen) onDoubleClick(r, c);
+    } else {
+      cell._clickPending = setTimeout(() => {
+        cell._clickPending = null;
+        // 单击已揭开格无操作（仅防止误触）
+      }, DOUBLE_CLICK_DELAY);
+    }
+    return;
+  }
+
+  // 未揭开的格子：立即揭开，无延迟
+  onLeftClick(r, c);
+});
+
+boardEl.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  const cell = e.target.closest('.cell');
+  if (!cell) return;
+  onRightClick(+cell.dataset.r, +cell.dataset.c);
+});
+
+boardEl.addEventListener('mousedown', (e) => {
+  if (e.button !== 0) return;
+  const cell = e.target.closest('.cell');
+  if (cell && isActive()) setFace(FACE.PRESS);
+});
+
+// 任意位置松开鼠标时恢复笑脸
+document.addEventListener('mouseup', () => {
+  if (isActive()) setFace(FACE.NORMAL);
+});
+
+// ==================== 控件事件绑定 ====================
+
+document.querySelectorAll('.diff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    config = { ...DIFFICULTIES[btn.dataset.diff] };
+    initGame();
+  });
+});
+
+themeToggle.addEventListener('click', () => {
+  isClassic = !isClassic;
+  applyTheme();
+});
+
+faceBtn.addEventListener('click', initGame);
+
+// ==================== 启动 ====================
+applyTheme();
+initGame();
+</script>
+</body>
+</html>
