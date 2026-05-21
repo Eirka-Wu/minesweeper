@@ -316,10 +316,32 @@ body.classic-theme { background: #008080; }
   background: #ffb0b0;
   text-decoration: line-through;
 }
+
+/* ================================================================
+   烟花效果（胜利动画）
+   ================================================================ */
+.firework-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+}
+.firework {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  animation: firework-explode 0.8s ease-out forwards;
+}
+@keyframes firework-explode {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(20); opacity: 0; }
+}
 </style>
 </head>
 
 <body>
+<div class="firework-container" id="fireworkContainer"></div>
 <div class="game" id="gameContainer">
   <!-- 难度选择 -->
   <div class="controls">
@@ -395,6 +417,49 @@ const themeToggle = document.getElementById('themeToggle');
 
 // ==================== 工具函数 ====================
 
+let fireworksActive = false;
+let fireworkTimeouts = [];
+
+/** 烟花效果 - 胜利时触发 */
+function spawnFireworks() {
+  if (fireworksActive) return;
+  fireworksActive = true;
+  fireworkTimeouts = [];
+  const container = document.getElementById('fireworkContainer');
+  if (!container) return;
+  const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+  const count = 12;
+
+  for (let i = 0; i < count; i++) {
+    const tid = setTimeout(() => {
+      const x = Math.random() * window.innerWidth;
+      const y = Math.random() * window.innerHeight;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const firework = document.createElement('div');
+      firework.className = 'firework';
+      firework.style.left = x + 'px';
+      firework.style.top = y + 'px';
+      firework.style.background = color;
+      firework.style.boxShadow = `0 0 10px 2px ${color}`;
+      container.appendChild(firework);
+      setTimeout(() => {
+        firework.remove();
+        if (i === count - 1) fireworksActive = false;
+      }, 800);
+    }, i * 150);
+    fireworkTimeouts.push(tid);
+  }
+}
+
+/** 清除烟花效果 */
+function clearFireworks() {
+  fireworksActive = false;
+  fireworkTimeouts.forEach(tid => clearTimeout(tid));
+  fireworkTimeouts = [];
+  const container = document.getElementById('fireworkContainer');
+  if (container) container.innerHTML = '';
+}
+
 /** 停止计时器 */
 function stopTimer() {
   clearInterval(timerInterval);
@@ -469,6 +534,7 @@ function initGame() {
   timerEl.textContent = fmt(0);
   mineCounter.textContent = fmt(config.mines);
   setFace(FACE.NORMAL);
+  clearFireworks();
 
   // 递增代数，使旧格子上的悬而未决的 setTimeout 回调失效
   renderGeneration++;
@@ -682,6 +748,7 @@ function checkWin() {
     flagsPlaced = config.mines;
     mineCounter.textContent = fmt(0);
     updateAllCells();
+    spawnFireworks();
   }
 }
 
