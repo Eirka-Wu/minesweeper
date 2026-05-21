@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"from PIL import Image; img = Image.open\\(r'C:\\\\Users\\\\44833\\\\Desktop\\\\first-cc\\\\aa18972bd40735fad0f5d9dc94510fb30f240849.webp'\\); img.save\\(r'C:\\\\Users\\\\44833\\\\Desktop\\\\first-cc\\\\_temp_ref.png'\\)\")",
+      "Bash(python -c \"from PIL import Image; img = Image.open\\(r'C:\\\\Users\\\\44833\\\\Desktop\\\\first-cc\\\\aa18972bd40735fad0f5d9dc94510fb30f240849.webp'\\); img.save\\(r'C:\\\\Users\\\\44833\\\\Desktop\\\\first-cc\\\\_temp_ref.png'\\)\")",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(npm install *)",
+      "Bash(git *)",
+      "Bash(gh --version)",
+      "Bash(winget install *)",
+      "Bash(gh auth *)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh repo *)",
+      "Skill(update-config)",
+      "Bash(jq --version)",
+      "Bash(echo '{\"session_id\":\"test\",\"cwd\":\"C:\\\\\\\\Users\\\\\\\\44833\\\\\\\\Desktop\\\\\\\\first-cc\",\"model\":{\"id\":\"deepseek-v4-pro\",\"display_name\":\"deepseek-v4-pro\"},\"context_window\":{\"remaining_percentage\":62}}')",
+      "Bash(python3 .claude/statusline.py)",
+      "Bash(python \".claude/statusline.py\")",
+      "Bash(python3 *)",
+      "Bash(command -v python)",
+      "Bash(command -v python3)",
+      "Bash(ls /d/Python* /c/Python* /c/Users/44833/Python*)",
+      "Bash(echo '{\"cwd\":\"C:\\\\\\\\Users\\\\\\\\44833\\\\\\\\Desktop\\\\\\\\first-cc\",\"model\":{\"display_name\":\"deepseek-v4-pro\"},\"context_window\":{\"remaining_percentage\":62}}')",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(printf '%s' '{\"cwd\":\"C:\\\\\\\\Users\\\\\\\\44833\\\\\\\\Desktop\\\\\\\\first-cc\",\"model\":{\"display_name\":\"deepseek-v4-pro\"},\"context_window\":{\"remaining_percentage\":62}}')",
+      "Bash(printf '%s' '{\"cwd\":\"C:\\\\\\\\\\\\\\\\Users\\\\\\\\\\\\\\\\44833\\\\\\\\\\\\\\\\Desktop\\\\\\\\\\\\\\\\first-cc\",\"model\":{\"display_name\":\"deepseek-v4-pro\"},\"context_window\":{\"remaining_percentage\":62}}')",
+      "WebSearch",
+      "Bash(mkdir -p .claude/skills/find-skills)",
+      "Bash(cp C:/Users/44833/AppData/Local/Temp/skills/skills/find-skills/SKILL.md .claude/skills/find-skills/)",
+      "Bash(curl *)"
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node C:/Users/44833/Desktop/first-cc/.claude/statusline.js 2>/dev/null"
+  }
+}
