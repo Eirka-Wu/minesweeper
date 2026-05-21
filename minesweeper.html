@@ -25,6 +25,7 @@ body {
    ================================================================ */
 .controls {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
   flex-wrap: wrap;
@@ -32,13 +33,13 @@ body {
 }
 .difficulty { display: flex; gap: 6px; }
 .theme-toggle {
-  width: 48px; height: 48px; font-size: 20px;
-  border: none; border-radius: 8px; cursor: pointer;
+  width: 48px; height: 36px; font-size: 18px;
+  border: none; border-radius: 6px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.1s;
-  flex-shrink: 0;  /* 防止被压缩，保持正方形 */
+  flex-shrink: 0;
 }
-.theme-toggle:hover { transform: scale(1.1); }
+.theme-toggle:hover { transform: scale(1.05); }
 .theme-toggle:active { transform: scale(0.95); }
 
 /* ===== 顶部信息栏 ===== */
@@ -81,71 +82,71 @@ body {
 
 
 /* ================================================================
-   现代皮肤（默认，暗色风格）
+   现代皮肤（默认，浅色明亮风格）
    ================================================================ */
 
 /* --- 现代皮肤：页面背景 --- */
-body { background: #1a1a2e; }
+body { background: #d4d9e0; }
 
 /* --- 现代皮肤：游戏容器 --- */
 .game {
   width: fit-content;       /* 收缩到内容宽度，避免右侧空白 */
-  background: #16213e;
+  background: #f0f2f5;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
 }
 
 /* --- 现代皮肤：计数显示器 --- */
 .counter {
-  background: #0f0f23;
-  color: #e94560;
+  background: #2c3e50;
+  color: #00ff88;
   font-family: 'Courier New', monospace;
   font-size: 28px; font-weight: bold;
   padding: 8px 16px; border-radius: 6px;
   min-width: 70px; text-align: center;
   letter-spacing: 2px;
-  border: 2px solid #0f3460;
+  border: 2px solid #34495e;
 }
 
 /* --- 现代皮肤：笑脸按钮 --- */
 .face {
   width: 48px; height: 48px; font-size: 28px;
   border: none; border-radius: 8px;
-  background: #0f3460; cursor: pointer;
+  background: #3498db; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.1s;
 }
-.face:hover { background: #1a4a8a; transform: scale(1.1); }
+.face:hover { background: #2980b9; transform: scale(1.1); }
 .face:active { transform: scale(0.95); }
 
 /* --- 现代皮肤：难度按钮 --- */
 .diff-btn {
-  padding: 6px 14px; border: 2px solid #0f3460; border-radius: 6px;
-  background: transparent; color: #a0a0c0; cursor: pointer;
+  height: 36px; padding: 0 16px; border: 2px solid #3498db; border-radius: 6px;
+  background: transparent; color: #3498db; cursor: pointer;
   font-size: 13px; transition: all 0.2s;
 }
-.diff-btn:hover { background: #0f3460; color: #fff; }
-.diff-btn.active { background: #e94560; border-color: #e94560; color: #fff; }
+.diff-btn:hover { background: #3498db; color: #fff; }
+.diff-btn.active { background: #e74c3c; border-color: #e74c3c; color: #fff; }
 
 /* --- 现代皮肤：皮肤切换按钮 --- */
 .theme-toggle {
-  background: transparent; color: #a0a0c0;
-  border: 2px solid #0f3460;
+  background: transparent; color: #3498db;
+  border: 2px solid #3498db;
 }
-.theme-toggle:hover { background: #0f3460; color: #fff; transform: scale(1.1); }
+.theme-toggle:hover { background: #3498db; color: #fff; transform: scale(1.1); }
 
 /* --- 现代皮肤：棋盘 --- */
-.board { background: #0f3460; }
+.board { background: #9ba5b0; }
 
 /* --- 现代皮肤：格子 --- */
-.cell { background: #1a3a6a; }
-.cell:hover { background: #25508a; }
-.cell.revealed { background: #0f0f23; }
-.cell.revealed:hover { background: #0f0f23; }
-.cell.mine-hit { background: #e94560 !important; }
-.cell.flagged { background: #1a3a6a; }
-.cell.wrong-flag { background: #ff6b6b40; text-decoration: line-through; }
+.cell { background: #b8c4d1; }
+.cell:hover { background: #a0b0c0; }
+.cell.revealed { background: #e5e8eb; }
+.cell.revealed:hover { background: #dbe1e6; }
+.cell.mine-hit { background: #e74c3c !important; }
+.cell.flagged { background: #b8c4d1; }
+.cell.wrong-flag { background: #ffcdd240; text-decoration: line-through; }
 
 
 /* ================================================================
@@ -323,18 +324,18 @@ body.classic-theme { background: #008080; }
   <!-- 难度选择 -->
   <div class="controls">
     <div class="difficulty">
-      <button class="diff-btn active" data-diff="beginner">初级 9×9</button>
-      <button class="diff-btn" data-diff="intermediate">中级 16×16</button>
-      <button class="diff-btn" data-diff="expert">高级 30×16</button>
+      <button class="diff-btn active" data-diff="beginner">初级</button>
+      <button class="diff-btn" data-diff="intermediate">中级</button>
+      <button class="diff-btn" data-diff="expert">高级</button>
     </div>
+    <button class="theme-toggle" id="themeToggle" title="切换皮肤">🎨</button>
   </div>
 
-  <!-- 状态栏：剩余雷数 / 重新开始 / 计时器 / 皮肤切换 -->
+  <!-- 状态栏：剩余雷数 / 重新开始 / 计时器 -->
   <div class="header">
     <div class="counter" id="mineCounter">010</div>
     <button class="face" id="faceBtn">😊</button>
     <div class="counter" id="timer">000</div>
-    <button class="theme-toggle" id="themeToggle" title="切换皮肤">🎨</button>
   </div>
 
   <!-- 游戏棋盘容器 -->
